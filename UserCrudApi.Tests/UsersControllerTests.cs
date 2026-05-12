@@ -1,3 +1,4 @@
+using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using UserCrudApi.Api.Controllers;
 using UserCrudApi.Api.Dtos;
@@ -25,13 +26,13 @@ public sealed class UsersControllerTests
             Email = "ADA@example.com"
         });
 
-        var created = Assert.IsType<CreatedAtActionResult>(result.Result);
-        var user = Assert.IsType<User>(created.Value);
+        var created = result.Result.Should().BeOfType<CreatedAtActionResult>().Subject;
+        var user = created.Value.Should().BeOfType<User>().Subject;
 
-        Assert.Equal(nameof(UsersController.GetById), created.ActionName);
-        Assert.Equal(1, user.Id);
-        Assert.Equal("Ada Lovelace", user.Name);
-        Assert.Equal("ada@example.com", user.Email);
+        created.ActionName.Should().Be(nameof(UsersController.GetById));
+        user.Id.Should().Be(1);
+        user.Name.Should().Be("Ada Lovelace");
+        user.Email.Should().Be("ada@example.com");
     }
 
     [Fact]
@@ -45,7 +46,7 @@ public sealed class UsersControllerTests
             Email = "ADA@example.com"
         });
 
-        Assert.IsType<ConflictObjectResult>(result.Result);
+        result.Result.Should().BeOfType<ConflictObjectResult>();
     }
 
     [Fact]
@@ -56,10 +57,10 @@ public sealed class UsersControllerTests
 
         var result = controller.GetAll();
 
-        var ok = Assert.IsType<OkObjectResult>(result.Result);
-        var users = Assert.IsAssignableFrom<IReadOnlyCollection<User>>(ok.Value);
+        var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        var users = ok.Value.Should().BeAssignableTo<IReadOnlyCollection<User>>().Subject;
 
-        Assert.Equal(2, users.Count);
+        users.Should().HaveCount(2);
     }
 
     [Fact]
@@ -69,10 +70,10 @@ public sealed class UsersControllerTests
 
         var result = controller.GetById(created.Id);
 
-        var ok = Assert.IsType<OkObjectResult>(result.Result);
-        var user = Assert.IsType<User>(ok.Value);
+        var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        var user = ok.Value.Should().BeOfType<User>().Subject;
 
-        Assert.Equal(created.Id, user.Id);
+        user.Id.Should().Be(created.Id);
     }
 
     [Fact]
@@ -80,7 +81,7 @@ public sealed class UsersControllerTests
     {
         var result = controller.GetById(999);
 
-        Assert.IsType<NotFoundResult>(result.Result);
+        result.Result.Should().BeOfType<NotFoundResult>();
     }
 
     [Fact]
@@ -94,12 +95,12 @@ public sealed class UsersControllerTests
             Email = "ada.byron@example.com"
         });
 
-        Assert.IsType<NoContentResult>(result);
+        result.Should().BeOfType<NoContentResult>();
 
         var updated = repository.GetById(created.Id);
-        Assert.NotNull(updated);
-        Assert.Equal("Ada Byron", updated.Name);
-        Assert.Equal("ada.byron@example.com", updated.Email);
+        updated.Should().NotBeNull();
+        updated!.Name.Should().Be("Ada Byron");
+        updated.Email.Should().Be("ada.byron@example.com");
     }
 
     [Fact]
@@ -111,7 +112,7 @@ public sealed class UsersControllerTests
             Email = "missing@example.com"
         });
 
-        Assert.IsType<NotFoundResult>(result);
+        result.Should().BeOfType<NotFoundResult>();
     }
 
     [Fact]
@@ -126,7 +127,7 @@ public sealed class UsersControllerTests
             Email = "ada@example.com"
         });
 
-        Assert.IsType<ConflictObjectResult>(result);
+        result.Should().BeOfType<ConflictObjectResult>();
     }
 
     [Fact]
@@ -136,8 +137,8 @@ public sealed class UsersControllerTests
 
         var result = controller.Delete(created.Id);
 
-        Assert.IsType<NoContentResult>(result);
-        Assert.Null(repository.GetById(created.Id));
+        result.Should().BeOfType<NoContentResult>();
+        repository.GetById(created.Id).Should().BeNull();
     }
 
     [Fact]
@@ -145,6 +146,6 @@ public sealed class UsersControllerTests
     {
         var result = controller.Delete(999);
 
-        Assert.IsType<NotFoundResult>(result);
+        result.Should().BeOfType<NotFoundResult>();
     }
 }
